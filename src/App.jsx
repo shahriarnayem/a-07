@@ -1,26 +1,49 @@
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom'
+import './App.css'
+import Navbar from './Components/Navbar'
+import Banner from './Components/Banner'
+import Footer from './Components/Footer'
+import Friends from './Components/Friend'
+import FriendDetail from './Components/FriendDetail'
+import Timeline from './Components/Timeline'
+import Stats from './Components/Stats'
+import NotFound from './Components/NotFound'
+
+function Home() {
+  return (
+    <>
+      <Banner />
+      <Friends />
+    </>
+  )
+}
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-5 bg-base-200">
-
-      <button className="btn btn-primary" onClick={() => toast.success("Working 🎉")}>
-        Show Toast
-      </button>
-
-      <h1 className="text-3xl font-bold">Hello 👋</h1>
-
-      <div className="card w-80 bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title">DaisyUI Ready</h2>
-          <p>Everything working 🚀</p>
-        </div>
-      </div>
-
-      <ToastContainer />
-    </div>
+    <RouterProvider router={createBrowserRouter([
+      {
+        path: "/",
+        element: (
+          <>
+            <Navbar />
+            <main className="min-h-screen">
+              <Outlet />
+            </main>
+            <Footer />
+          </>
+        ),
+        children: [
+          { index: true, element: <Home /> },
+          { path: "friends", element: <Friends /> },
+          { path: "friend/:id", element: <FriendDetail /> },
+          { path: "timeline", element: <Timeline /> },
+          { path: "stats", element: <Stats /> },
+          { path: "*", element: <NotFound /> },
+        ]
+      }
+    ])} 
+  />
   );
 }
 
-export default App;
+export default App

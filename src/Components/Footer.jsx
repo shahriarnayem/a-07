@@ -3,7 +3,7 @@ import React from "react";
 const Footer = () => {
   return (
     <footer className="w-full bg-[#1e4035] text-[#d4e8de]">
-      <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center text-center">
+      <div className="max-w-[1200px] mx-auto px-6 py-12 flex flex-col items-center text-center">
 
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
           <span>Keen</span>
@@ -41,7 +41,7 @@ const Footer = () => {
       </div>
 
       <div className="border-t border-[#2d5a48] px-6 md:px-10 py-6">
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center">
+        <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center">
           <p className="text-xs text-[#7aa48e]">
             © 2025 KeenKeeper. All rights reserved.
           </p>

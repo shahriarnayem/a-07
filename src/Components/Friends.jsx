@@ -1,92 +1,107 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const statusConfig = {
-  overdue: { label: "Overdue", className: "bg-[#ff4d4d] text-white" },
-  "almost-due": { label: "Almost Due", className: "bg-[#f5a623] text-white" },
-  "on-track": { label: "On-Track", className: "bg-[#1e4035] text-white" },
+const STATUS_MAP = {
+  overdue: {
+    label: "Overdue",
+    style: "bg-red-500 text-white",
+  },
+  "almost-due": {
+    label: "Almost Due",
+    style: "bg-amber-500 text-white",
+  },
+  "on-track": {
+    label: "On Track",
+    style: "bg-[#19382f] text-white",
+  },
 };
 
-const FriendCard = ({ friend }) => {
+const FriendItem = ({ data }) => {
   const navigate = useNavigate();
-  const status = statusConfig[friend.status] || {
-    label: friend.status,
-    className: "bg-[#1e4035] text-white",
+
+  const currentStatus = STATUS_MAP[data.status] || {
+    label: data.status,
+    style: "bg-[#19382f] text-white",
   };
 
   return (
-    <div 
-      onClick={() => navigate(`/friend/${friend.id}`)}
-      className="bg-white rounded-[16px] p-6 pb-5 flex flex-col items-center gap-2 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer group">
+    <div
+      onClick={() => navigate(`/friend/${data.id}`)}
+      className="group flex flex-col items-center gap-2 rounded-[16px] bg-white p-6 pb-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+    >
       <img
-        src={friend.picture}
-        alt={friend.name}
-        className="w-20 h-20 rounded-full object-cover mb-1 ring-2 ring-gray-50 group-hover:ring-[#1e4035]/10 transition-all"
+        src={data.picture}
+        alt={data.name}
         onError={(e) => {
           e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            friend.name
-          )}&background=1e4035&color=fff`;
-        }}/>
-        
-      <h3 className="text-[1rem] font-bold text-[#1a2e26] m-0 text-center">
-        {friend.name}
+            data.name
+          )}&background=19382f&color=fff`;
+        }}
+        className="mb-1 h-20 w-20 rounded-full object-cover ring-2 ring-gray-100 transition-all group-hover:ring-[#19382f]/10"
+      />
+
+      <h3 className="m-0 text-center text-[1rem] font-bold text-[#172923]">
+        {data.name}
       </h3>
-      <p className="text-[0.78rem] text-[#8fa89e] m-0">
-        {friend.days_since_contact}d ago
+
+      <p className="m-0 text-[0.78rem] text-[#8aa39a]">
+        {data.days_since_contact}d ago
       </p>
-      
-      <div className="flex flex-wrap gap-1.5 justify-center">
-        {friend.tags.map((tag) => (
-          <span 
-            key={tag} 
-            className="bg-[#e6f4ee] text-[#2d7a5a] text-[0.65rem] font-semibold px-2.5 py-0.5 rounded-full tracking-wider"
+
+      <div className="flex flex-wrap justify-center gap-1.5">
+        {data.tags.map((tag) => (
+          <span
+            key={tag}
+            className="rounded-full bg-[#e6f4ee] px-2.5 py-0.5 text-[0.65rem] font-semibold tracking-wider text-[#2d7a5a]"
           >
             {tag.toUpperCase()}
           </span>
         ))}
       </div>
-      
-      <span className={`text-[0.72rem] font-semibold px-3.5 py-1 rounded-full mt-1 ${status.className}`}>
-        {status.label}
+
+      <span
+        className={`mt-1 rounded-full px-3.5 py-1 text-[0.72rem] font-semibold ${currentStatus.style}`}
+      >
+        {currentStatus.label}
       </span>
     </div>
   );
 };
 
 const Friends = () => {
-  const [friends, setFriends] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [list, setList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetch("/friends.json")
       .then((res) => res.json())
       .then((data) => {
-        setFriends(data);
-        setLoading(false);
+        setList(data);
+        setIsLoading(false);
       })
       .catch(() => {
-
-        setLoading(false);
+        setIsLoading(false);
       });
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-[#c8ddd5] border-t-[#1e4035] rounded-full animate-spin"></div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#c8ddd5] border-t-[#19382f]" />
       </div>
     );
   }
 
   return (
-    <section className="bg-[#f0f4f8] min-h-screen px-6 py-10">
-      <div className="max-w-[1600px] mx-auto">
-        <h2 className="text-[1.6rem] font-bold text-[#1a2e26] mb-6 font-serif">
+    <section className="min-h-screen bg-[#eef3f7] px-6 py-10">
+      <div className="mx-auto max-w-[1200px]">
+        <h2 className="mb-6 text-[1.6rem] font-serif font-bold text-[#172923]">
           Your Friends
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {friends.map((friend) => (
-            <FriendCard key={friend.id} friend={friend} />
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {list.map((item) => (
+            <FriendItem key={item.id} data={item} />
           ))}
         </div>
       </div>

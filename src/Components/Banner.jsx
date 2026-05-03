@@ -1,78 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 
 const Banner = () => {
-  const [stats, setStats] = useState({
-    total: 0,
-    onTrack: 0,
-    needAttention: 0,
-    interactions: 0,
+  const [overview, setOverview] = useState({
+    totalCount: 0,
+    active: 0,
+    attention: 0,
+    monthly: 0,
   });
 
   useEffect(() => {
-    const fetchFriendsData = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch('/friends.json');
-        const data = await response.json();
+        const res = await fetch("/friends.json");
+        const list = await res.json();
 
-        const totalFriends = data.length;
-        
-        const onTrackCount = data.filter(friend => friend.status === 'on track' || friend.status === 'good').length;
-        const needAttentionCount = data.filter(friend => friend.status === 'overdue' || friend.status === 'needs attention').length;
-        
-        const interactionsThisMonth = data.filter(friend => friend.days_since_contact <= 30).length;
+        const totalCount = list.length;
 
-        setStats({
-          total: totalFriends,
-          onTrack: onTrackCount || 3, 
-          needAttention: needAttentionCount || 6,
-          interactions: interactionsThisMonth || 12,
+        const activeCount = list.filter(
+          (item) => item.status === "on track" || item.status === "good"
+        ).length;
+
+        const attentionCount = list.filter(
+          (item) =>
+            item.status === "overdue" || item.status === "needs attention"
+        ).length;
+
+        const monthlyInteractions = list.filter(
+          (item) => item.days_since_contact <= 30
+        ).length;
+
+        setOverview({
+          totalCount,
+          active: activeCount || 2,
+          attention: attentionCount || 5,
+          monthly: monthlyInteractions || 10,
         });
-      } catch (error) {
-        console.error("Failed to load friends data:", error);
+      } catch (err) {
+        console.error("Error loading data:", err);
       }
     };
 
-    fetchFriendsData();
+    loadData();
   }, []);
 
+  const StatCard = ({ value, label }) => (
+    <div className="flex w-48 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1">
+      <span className="mb-2 text-3xl font-bold text-[#264f42]">{value}</span>
+      <span className="text-sm font-medium text-slate-600">{label}</span>
+    </div>
+  );
+
   return (
-    <div className="w-full bg-[#f8fafc] py-16 px-6 flex flex-col items-center text-center font-sans">
-      <h1 className="text-4xl font-bold text-slate-800 tracking-tight mb-4">
+    <div className="flex w-full flex-col items-center bg-[#f9fbfd] px-6 py-16 text-center font-sans">
+      
+      <h1 className="mb-4 text-4xl font-bold tracking-tight text-slate-900">
         Friends to keep close in your life
       </h1>
-      <p className="text-slate-500 max-w-xl mx-auto mb-8 text-[15px] leading-relaxed">
-        Your personal shelf of meaningful connections. Browse, tend, and nurture the relationships that matter most.
+
+      <p className="mx-auto mb-8 max-w-xl text-[15px] leading-relaxed text-slate-600">
+        Your personal shelf of meaningful connections. Browse, nurture, and stay
+        connected with the people who matter most.
       </p>
-      {/* Add Friend Button */}
-      <button className="flex items-center space-x-2 bg-[#2b5a4a] hover:bg-[#22483b] transition-colors text-white px-5 py-2.5 rounded-md text-sm font-medium mb-16 shadow-sm">
-        <Plus className="w-4 h-4" strokeWidth={2.5} />
+
+      {/* Button */}
+      <button className="mb-16 flex items-center gap-2 rounded-md bg-[#264f42] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#1f3e34]">
+        <Plus className="h-4 w-4" strokeWidth={2.4} />
         <span>Add a Friend</span>
       </button>
 
-      {/* Stats Cards Container */}
+      {/* Stats */}
       <div className="flex flex-wrap justify-center gap-6">
-        
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 w-48 flex flex-col items-center justify-center transition-transform hover:-translate-y-1 duration-200">
-          <span className="text-3xl font-bold text-[#2b5a4a] mb-2">{stats.total}</span>
-          <span className="text-sm text-slate-500 font-medium">Total Friends</span>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 w-48 flex flex-col items-center justify-center transition-transform hover:-translate-y-1 duration-200">
-          <span className="text-3xl font-bold text-[#2b5a4a] mb-2">{stats.onTrack}</span>
-          <span className="text-sm text-slate-500 font-medium">On Track</span>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 w-48 flex flex-col items-center justify-center transition-transform hover:-translate-y-1 duration-200">
-          <span className="text-3xl font-bold text-[#2b5a4a] mb-2">{stats.needAttention}</span>
-          <span className="text-sm text-slate-500 font-medium">Need Attention</span>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 w-48 flex flex-col items-center justify-center transition-transform hover:-translate-y-1 duration-200">
-          <span className="text-3xl font-bold text-[#2b5a4a] mb-2">{stats.interactions}</span>
-          <span className="text-sm text-slate-500 font-medium">Interactions This Month</span>
-        </div>
-
+        <StatCard value={overview.totalCount} label="Total Friends" />
+        <StatCard value={overview.active} label="On Track" />
+        <StatCard value={overview.attention} label="Need Attention" />
+        <StatCard value={overview.monthly} label="Interactions This Month" />
       </div>
     </div>
   );

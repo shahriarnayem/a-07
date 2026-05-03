@@ -3,7 +3,7 @@ import './App.css'
 import Navbar from './Components/Navbar'
 import Banner from './Components/Banner'
 import Footer from './Components/Footer'
-import Friends from './Components/Friend'
+import Friends from './Components/Friends'
 import FriendDetail from './Components/FriendDetail'
 import Timeline from './Components/Timeline'
 import Stats from './Components/Stats'
@@ -35,7 +35,7 @@ function App() {
         children: [
           { index: true, element: <Home /> },
           { path: "friends", element: <Friends /> },
-          { path: "friend/:id", element: <FriendDetail /> },
+          { path: "friends/:id", element: <FriendDetail /> },
           { path: "timeline", element: <Timeline /> },
           { path: "stats", element: <Stats /> },
           { path: "*", element: <NotFound /> },

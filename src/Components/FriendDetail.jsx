@@ -11,269 +11,218 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-const ToastMessage = ({ text, onClose }) => {
+const Toast = ({ message, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(onClose, 3000);
+    return () => clearTimeout(t);
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl bg-[#19382f] px-5 py-3.5 text-white shadow-xl animate-slide-up">
-      <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-300" />
-      <span className="text-sm font-medium">{text}</span>
+    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-[#1e4035] text-white px-5 py-3.5 rounded-xl shadow-xl animate-slide-up">
+      <CheckCircle className="w-5 h-5 text-green-300" />
+      <span className="text-sm font-medium">{message}</span>
     </div>
   );
 };
 
 const InfoCard = ({ value, label }) => (
-  <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white py-6 shadow-sm">
-    <span className="mb-1 text-2xl font-bold text-[#19382f]">{value}</span>
-    <span className="text-xs text-slate-600">{label}</span>
+  <div className="bg-white border border-gray-200 rounded-xl py-6 flex flex-col items-center justify-center shadow-sm">
+    <span className="text-2xl font-bold text-[#1e4035] mb-1">{value}</span>
+    <span className="text-xs text-gray-500">{label}</span>
   </div>
 );
 
-const ActionButton = ({ icon: Icon, label, danger }) => (
-  <button
-    className={`flex items-center justify-center gap-2 py-4 text-sm font-medium transition-colors ${
-      danger
-        ? "text-red-600 hover:bg-red-50"
-        : "text-slate-700 hover:bg-slate-100"
-    }`}
-  >
-    <Icon className="h-4 w-4" />
-    {label}
-  </button>
-);
+const getIcon = (type) => {
+  switch (type) {
+    case "Text":
+      return MessageSquare;
+    case "Call":
+      return Phone;
+    case "Video":
+      return Video;
+    default:
+      return MessageSquare;
+  }
+};
 
 const FriendDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [friend, setFriend] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [recent, setRecent] = useState([]);
 
   useEffect(() => {
     fetch("/friends.json")
       .then((res) => res.json())
       .then((data) => {
-        const match = data.find((item) => item.id === Number(id));
-        setUser(match);
-        setIsLoading(false);
+        const found = data.find((f) => f.id === parseInt(id));
+        setFriend(found);
+        setLoading(false);
       });
+
+    const stored = JSON.parse(localStorage.getItem("kk_timeline") || "[]");
+    setRecent(stored.slice(0, 4));
   }, [id]);
 
-  const handleInteraction = (type) => {
-    if (!user) return;
+  const handleCheckIn = (type) => {
+    if (!friend) return;
 
-    const entry = {
+    const newEntry = {
       id: Date.now(),
       type,
-      title: `${type} with ${user.name}`,
-      with: user.name,
+      with: friend.name,
       date: new Date().toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "long",
         year: "numeric",
+        month: "short",
+        day: "numeric",
       }),
     };
 
-    const stored = JSON.parse(localStorage.getItem("kk_timeline") || "[]");
-    localStorage.setItem("kk_timeline", JSON.stringify([entry, ...stored]));
+    const existing = JSON.parse(localStorage.getItem("kk_timeline") || "[]");
+    const updated = [newEntry, ...existing];
 
-    setToast({ text: `${type} with ${user.name} logged!` });
-    setTimeout(() => navigate("/timeline"), 1700);
+    localStorage.setItem("kk_timeline", JSON.stringify(updated));
+    setRecent(updated.slice(0, 4));
+
+    setToast({ message: `${type} with ${friend.name} logged!` });
+    setTimeout(() => navigate("/timeline"), 1800);
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f9fbfd]">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#c8ddd5] border-t-[#19382f]" />
+      <div className="flex justify-center items-center min-h-screen bg-[#f8fafc]">
+        <div className="w-10 h-10 border-4 border-gray-200 border-t-[#1e4035] rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!friend) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#f9fbfd]">
-        <h2 className="text-2xl font-bold text-slate-900">Friend not found</h2>
-        <button
-          onClick={() => navigate("/")}
-          className="mt-4 text-[#264f42] underline"
-        >
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc]">
+        <h2 className="text-2xl font-bold text-gray-900">Friend not found</h2>
+        <button onClick={() => navigate("/")} className="mt-4 text-[#2b5a4a] underline">
           Go back home
         </button>
       </div>
     );
   }
 
-  const interactions = [
-    { title: "Text", desc: "Asked for career advice", date: "Jan 28, 2026", icon: MessageSquare },
-    { title: "Meetup", desc: "Industry conference meetup", date: "Jan 28, 2026", icon: Phone },
-    { title: "Video", desc: "Catch up call", date: "Jan 28, 2026", icon: Video },
-    { title: "Text", desc: "Quick check-in", date: "Jan 28, 2026", icon: Phone },
-  ];
-
-  const quickActions = [
-    { label: "Call", type: "Call", icon: Phone },
-    { label: "Text", type: "Text", icon: MessageSquare },
-    { label: "Video", type: "Video", icon: Video },
+  const actions = [
+    { label: "Call", type: "Call", Icon: Phone },
+    { label: "Text", type: "Text", Icon: MessageSquare },
+    { label: "Video", type: "Video", Icon: Video },
   ];
 
   return (
     <>
-      {toast && <ToastMessage text={toast.text} onClose={() => setToast(null)} />}
+      {toast && <Toast message={toast.message} onClose={() => setToast(null)} />}
 
-      <style>{`
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-up { animation: slide-up 0.25s ease forwards; }
-      `}</style>
+      <section className="bg-[#f8fafc] min-h-screen py-10 px-4 md:px-8 flex justify-center">
+        <div className="max-w-5xl w-full flex flex-col md:flex-row gap-6">
 
-      <section className="flex min-h-screen justify-center bg-[#f9fbfd] px-4 py-10 md:px-8">
-        <div className="flex w-full max-w-5xl flex-col gap-6 md:flex-row">
+          <div className="w-full md:w-[320px] flex flex-col gap-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-8 flex flex-col items-center text-center shadow-sm">
+              <img src={friend.picture} alt={friend.name} className="w-24 h-24 rounded-full object-cover mb-4 ring-4 ring-gray-100" />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{friend.name}</h2>
 
-          {/* LEFT */}
-          <div className="flex w-full flex-col gap-4 md:w-[320px]">
-            <div className="flex flex-col items-center rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-              <img
-                src={user.picture}
-                alt={user.name}
-                className="mb-4 h-24 w-24 rounded-full object-cover ring-4 ring-slate-50"
-              />
-              <h2 className="mb-2 text-xl font-bold text-slate-900">
-                {user.name}
-              </h2>
+              <span className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full ${
+                friend.status === "overdue" ? "bg-red-500 text-white" : "bg-[#1e4035] text-white"
+              }`}>
+                {friend.status}
+              </span>
 
-              <div className="mb-6 flex flex-col items-center gap-2">
-                <span
-                  className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                    user.status === "overdue"
-                      ? "bg-red-500 text-white"
-                      : "bg-[#19382f] text-white"
-                  }`}
-                >
-                  {user.status}
-                </span>
-
-                <div className="flex flex-wrap justify-center gap-1">
-                  {user.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-[#e6f4ee] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#2d7a5a]"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+              <div className="flex gap-1 flex-wrap justify-center mt-2 mb-4">
+                {friend.tags.map((tag) => (
+                  <span key={tag} className="text-[10px] font-bold px-3 py-1 rounded-full bg-[#e6f4ee] text-[#2d7a5a]">
+                    {tag}
+                  </span>
+                ))}
               </div>
 
-              <p className="mb-2 text-sm italic text-slate-600">
-                "{user.bio}"
-              </p>
-              <p className="text-xs text-slate-400">Email: {user.email}</p>
+              <p className="text-sm text-gray-500 italic mb-2">"{friend.bio}"</p>
+              <p className="text-xs text-gray-400">Email: {friend.email}</p>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm divide-y">
-              <ActionButton icon={Bell} label="Snooze 2 Weeks" />
-              <ActionButton icon={Archive} label="Archive" />
-              <ActionButton icon={Trash2} label="Delete" danger />
+            <div className="bg-white border border-gray-200 rounded-xl p-1 flex flex-col gap-1 shadow-sm">
+              <button className="flex items-center justify-center gap-2 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
+                <Bell className="w-4 h-4" /> Snooze 2 Weeks
+              </button>
+              <button className="flex items-center justify-center gap-2 py-3 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
+                <Archive className="w-4 h-4" /> Archive
+              </button>
+              <button className="flex items-center justify-center gap-2 py-3 rounded-lg text-sm text-red-600 hover:bg-red-50">
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
             </div>
           </div>
 
-          {/* RIGHT */}
-          <div className="flex flex-1 flex-col gap-4">
+          <div className="flex-1 flex flex-col gap-4">
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <InfoCard value={user.days_since_contact} label="Days Since Contact" />
-              <InfoCard value={user.goal} label="Goal (Days)" />
-              <InfoCard
-                value={new Date(user.next_due_date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-                label="Next Due"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <InfoCard value={friend.days_since_contact} label="Days Since Contact" />
+              <InfoCard value={friend.goal} label="Goal (Days)" />
+              <InfoCard value={new Date(friend.next_due_date).toLocaleDateString()} label="Next Due" />
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-semibold text-[#19382f]">
-                  Relationship Goal
-                </h3>
-                <button className="rounded border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50">
-                  Edit
-                </button>
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+              <div className="flex justify-between mb-2">
+                <h3 className="font-semibold text-[#1e4035]">Relationship Goal</h3>
+                <button className="text-xs border px-3 py-1 rounded text-gray-600 hover:bg-gray-50">Edit</button>
               </div>
-              <p className="text-sm text-slate-600">
-                Connect every{" "}
-                <strong className="text-slate-900">{user.goal} days</strong>
+              <p className="text-sm text-gray-600">
+                Connect every <strong>{friend.goal} days</strong>
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 font-semibold text-[#19382f]">
-                Quick Check-In
-              </h3>
-
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+              <h3 className="font-semibold text-[#1e4035] mb-4">Quick Check-In</h3>
               <div className="flex gap-4">
-                {quickActions.map(({ label, type, icon: Icon }) => (
+                {actions.map(({ label, type, Icon }) => (
                   <button
                     key={type}
-                    onClick={() => handleInteraction(type)}
-                    className="flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-slate-200 py-4 transition-all duration-150 hover:bg-[#eef8f3] hover:border-[#a8d5bc] active:scale-95"
+                    onClick={() => handleCheckIn(type)}
+                    className="flex-1 flex flex-col items-center justify-center gap-2 border rounded-lg py-4 hover:bg-[#f0f9f4]"
                   >
-                    <Icon className="h-5 w-5 text-slate-600" />
-                    <span className="text-sm font-medium text-slate-600">
-                      {label}
-                    </span>
+                    <Icon className="w-5 h-5 text-gray-600" />
+                    <span className="text-sm text-gray-700">{label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-semibold text-[#19382f]">
-                  Recent Interactions
-                </h3>
-                <button
-                  onClick={() => navigate("/timeline")}
-                  className="flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                >
-                  <History className="h-3.5 w-3.5" />
-                  Full History
+            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+              <div className="flex justify-between mb-6">
+                <h3 className="font-semibold text-[#1e4035]">Recent Interactions</h3>
+                <button onClick={() => navigate("/timeline")} className="text-xs flex items-center gap-1 text-gray-600">
+                  <History className="w-3.5 h-3.5" /> Full History
                 </button>
               </div>
 
               <div className="flex flex-col divide-y">
-                {interactions.map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between py-4 first:pt-0 last:pb-0"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Icon className="h-5 w-5 text-slate-700" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            {item.title}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {item.desc}
-                          </p>
+                {recent.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-gray-400">
+                    No recent interactions
+                  </p>
+                ) : (
+                  recent.map((item) => {
+                    const Icon = getIcon(item.type);
+                    return (
+                      <div key={item.id} className="flex justify-between items-center py-4">
+                        <div className="flex items-center gap-4">
+                          <Icon className="w-5 h-5 text-gray-700" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{item.type}</p>
+                            <p className="text-xs text-gray-500">with {item.with}</p>
+                          </div>
                         </div>
+                        <span className="text-xs text-gray-400">{item.date}</span>
                       </div>
-                      <span className="text-xs font-medium text-slate-400">
-                        {item.date}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
 
